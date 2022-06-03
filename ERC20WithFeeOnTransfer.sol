@@ -2,16 +2,20 @@
 
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 
-contract MyToken is ERC20 {
+contract MyToken is Context, ERC20, Ownable {
 
     mapping (address => bool) private _isExcludedFromFee;
+    mapping(address => uint256) private _balances;
     uint256 public _feePecentage; 
     uint256 constant _fullPercentage = 10000;
     address public _fund;
     address public MANAGER;
 
+   
     event FundModified(address indexed previousFund, address indexed newFund);
     event ManagerModified(address indexed previousFund, address indexed newFund);
     event FeeModified(uint256 indexed newFeePercentage);
@@ -21,6 +25,7 @@ contract MyToken is ERC20 {
         _isExcludedFromFee[address(this)] = true;
         _isExcludedFromFee[fundAddress] = true;
         _mint(fundAddress, totalSupply);
+        _balances[fundAddress] = totalSupply;
         MANAGER = managerAddress;
     }
 
@@ -78,7 +83,7 @@ contract MyToken is ERC20 {
         _isExcludedFromFee[disableAddress] == false;
     }
 
-    function isExcludedFromFee(address checkAddress) external view {
+    function isExcludedFromFee(address checkAddress) external view returns(bool) {
         return _isExcludedFromFee[checkAddress];
     }
 }
