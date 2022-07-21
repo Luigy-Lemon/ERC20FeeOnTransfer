@@ -35,6 +35,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
 contract ERC20 is Context, IERC20, IERC20Metadata {
 
     mapping (address => bool) private _isExcludedFromFee;
+    mapping (address => bool) private _isPairAddress;
     mapping(address => uint256) private _balances;
     uint256 public _feePecentage; 
     uint256 constant _fullPercentage = 10000;
@@ -251,7 +252,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         require(amount > 0, "Transfer amount must be greater than zero");
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
-
+        require((!_isPairAddress[from] || (_isPairAddress[from] && MANAGER == to)), "Not allowed to buy from DEX");
         _beforeTokenTransfer(from, to, amount);
 
         uint256 fromBalance = _balances[from];
@@ -434,5 +435,17 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 
     function isExcludedFromFee(address checkAddress) external view returns(bool) {
         return _isExcludedFromFee[checkAddress];
+    }
+
+    function isPairAddress(address checkAddress) external view returns(bool) {
+        return _isPairAddress[checkAddress];
+    }
+
+    function addPairAddress(address enableAddress) external onlyManager(){
+        _isPairAddress[enableAddress] = true;
+    }
+
+    function removePairAddress(address disableAddress) external onlyManager(){
+        _isPairAddress[disableAddress] = false;
     }
 }
